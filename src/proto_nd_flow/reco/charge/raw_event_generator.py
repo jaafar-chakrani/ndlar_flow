@@ -82,7 +82,7 @@ class RawEventGenerator(H5FlowGenerator):
     default_packets_dset_name = 'charge/packets'
     default_mc_events_dset_name = 'mc_truth/interactions'
     default_mc_stack_dset_name = 'mc_truth/stack'
-    default_mc_tracks_dset_name = 'mc_truth/tracks'
+    default_mc_tracks_dset_name = 'mc_truth/segments'
     default_mc_trajectories_dset_name = 'mc_truth/trajectories'
     default_mc_packet_fraction_dset_name = 'mc_truth/packet_fraction'
 
@@ -149,7 +149,7 @@ class RawEventGenerator(H5FlowGenerator):
         self.packets_dtype = self.packets.dtype
         if self.is_mc:
             self.mc_assn = self.input_fh['mc_packets_assn']
-            self.mc_tracks = self.input_fh['tracks']
+            self.mc_tracks = self.input_fh['segments']
             self.mc_trajectories = self.input_fh['trajectories']
             self.mc_events = self.input_fh['genie_hdr']
             self.mc_stack = self.input_fh['genie_stack']
@@ -257,9 +257,9 @@ class RawEventGenerator(H5FlowGenerator):
                 ceil(len(evs) / self.size * self.rank),
                 ceil(len(evs) / self.size * (self.rank + 1)))
 
-            stack_trackid = self.mc_stack['trackID'][:]
-            traj_trackid = self.mc_trajectories['trackID'][:]
-            tracks_trackid = self.mc_tracks['trackID'][:]
+            stack_trackid = self.mc_stack['trajID'][:]
+            traj_trackid = self.mc_trajectories['trajID'][:]
+            tracks_trackid = self.mc_tracks['trajID'][:]
             iter_ = tqdm(range(truth_slice.start, truth_slice.stop), smoothing=1, desc='generating truth references') if self.rank == 0 else range(truth_slice.start, truth_slice.stop)
             for i in iter_:
                 if i < len(evs):
