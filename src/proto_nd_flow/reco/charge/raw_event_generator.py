@@ -151,8 +151,8 @@ class RawEventGenerator(H5FlowGenerator):
             self.mc_assn = self.input_fh['mc_packets_assn']
             self.mc_tracks = self.input_fh['segments']
             self.mc_trajectories = self.input_fh['trajectories']
-            self.mc_events = self.input_fh['genie_hdr']
-            self.mc_stack = self.input_fh['genie_stack']
+            self.mc_events = self.input_fh['mc_hdr']
+            self.mc_stack = self.input_fh['mc_stack']
 
         # initialize data objects
         self.data_manager.create_dset(self.raw_event_dset_name, dtype=self.raw_event_dtype)
@@ -241,25 +241,24 @@ class RawEventGenerator(H5FlowGenerator):
             self.data_manager.create_ref(self.mc_stack_dset_name, self.mc_trajectories_dset_name)
             self.data_manager.create_ref(self.mc_trajectories_dset_name, self.mc_tracks_dset_name)
 
-            # create references between trajectories and tracks
-            # eventID --> vertexID for latest production files
-            intr_evid = self.mc_events['vertexID'][:]
-            stack_evid = self.mc_stack['vertexID'][:]
-            traj_evid = self.mc_trajectories['vertexID'][:]
-            tracks_evid = self.mc_tracks['vertexID'][:]
+            # create references between trajectories and segments (aka tracks)
+            intr_evid = self.mc_events['vertex_id'][:]
+            stack_evid = self.mc_stack['vertex_id'][:]
+            traj_evid = self.mc_trajectories['vertex_id'][:]
+            tracks_evid = self.mc_tracks['vertex_id'][:]
             evs, ev_traj_start, ev_track_start = np.intersect1d(
                 traj_evid, tracks_evid, return_indices=True)
             evs, ev_traj_end, ev_track_end = np.intersect1d(
                 traj_evid[::-1], tracks_evid[::-1], return_indices=True)
-            ev_traj_end = len(self.mc_trajectories['vertexID']) - ev_traj_end
-            ev_track_end = len(self.mc_tracks['vertexID']) - ev_track_end
+            ev_traj_end = len(self.mc_trajectories['vertex_id']) - ev_traj_end
+            ev_track_end = len(self.mc_tracks['vertex_id']) - ev_track_end
             truth_slice = slice(
                 ceil(len(evs) / self.size * self.rank),
                 ceil(len(evs) / self.size * (self.rank + 1)))
 
-            stack_trackid = self.mc_stack['trajID'][:]
-            traj_trackid = self.mc_trajectories['trajID'][:]
-            tracks_trackid = self.mc_tracks['trajID'][:]
+            stack_trackid = self.mc_stack['traj_id'][:]
+            traj_trackid = self.mc_trajectories['traj_id'][:]
+            tracks_trackid = self.mc_tracks['traj_id'][:]
             iter_ = tqdm(range(truth_slice.start, truth_slice.stop), smoothing=1, desc='generating truth references') if self.rank == 0 else range(truth_slice.start, truth_slice.stop)
             for i in iter_:
                 if i < len(evs):
